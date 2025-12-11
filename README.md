@@ -1,9 +1,3 @@
-Based on the code you provided, here is a comprehensive `README.md` file tailored for your **SecureVault** frontend application.
-
-This documentation explains the project's purpose, the "Neobrutalist" design choice, the Catppuccin color scheme, and how to connect it to your backend API.
-
------
-
 # SecureVault Frontend 🔒
 
    
