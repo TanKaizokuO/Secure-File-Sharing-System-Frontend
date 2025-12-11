@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS VARIABLES & THEME --- */
+        :root {
+            /* Catppuccin Mocha (Dark Mode Default) */
+            --bg-base: #1e1e2e;
+            --bg-mantle: #181825;
+            --text-main: #cdd6f4;
+            --accent-mauve: #cba6f7;
+            --accent-pink: #f5c2e7;
+            --accent-sapphire: #74c7ec;
+            --accent-green: #a6e3a1;
+            --accent-red: #f38ba8;
+            --accent-yellow: #f9e2af;
+            
+            /* Neobrutalism Core */
+            --border-color: #111111;
+            --border-width: 3px;
+            --shadow-offset: 4px;
+            --shadow-color: #111111;
+        }
+
+        /* Light Mode (Catppuccin Latte) */
+        html.light-mode {
+            --bg-base: #eff1f5;
+            --bg-mantle: #e6e9ef;
+            --text-main: #4c4f69;
+            --accent-mauve: #8839ef;
+            --accent-pink: #ea76cb;
+            --accent-sapphire: #209fb5;
+            --accent-green: #40a02b;
+            --accent-red: #d20f39;
+            --accent-yellow: #df8e1d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* --- UTILITIES & NEOBRUTALISM --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background-color: var(--bg-mantle);
+            border: var(--border-width) solid var(--border-color);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--shadow-color);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s;
+        }
+
+        .btn {
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-sapphire);
+            color: #111;
+            border: var(--border-width) solid var(--border-color);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--shadow-color);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0px 0px var(--shadow-color);
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px 0px var(--shadow-color);
+        }
+
+        .btn-primary { background-color: var(--accent-mauve); }
+        .btn-success { background-color: var(--accent-green); }
+        .btn-danger { background-color: var(--accent-red); }
+        .btn-icon { padding: 0.5rem; }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            font-family: inherit;
+            margin-bottom: 1rem;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            border: var(--border-width) solid var(--border-color);
+            box-shadow: 2px 2px 0px 0px var(--shadow-color);
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            box-shadow: 4px 4px 0px 0px var(--accent-pink);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--accent-pink);
+        }
+
+        /* --- LAYOUT --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            border-bottom: var(--border-width) solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            color: var(--accent-mauve);
+            text-shadow: 2px 2px 0px var(--border-color);
+        }
+
+        .tagline {
+            font-style: italic;
+            color: var(--accent-sapphire);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* --- COMPONENTS --- */
+        
+        /* Health Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border: var(--border-width) solid var(--border-color);
+            font-weight: bold;
+            font-size: 0.8rem;
+            background-color: var(--accent-red); /* Default error */
+            color: #111;
+        }
+        .status-badge.ok { background-color: var(--accent-green); }
+
+        /* Toggle Switch */
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-main);
+        }
+
+        /* Vault Table */
+        .vault-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .vault-item {
+            background-color: var(--bg-base);
+            border: var(--border-width) solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        @media (min-width: 600px) {
+            .vault-item {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        .file-info {
+            flex-grow: 1;
+        }
+        
+        .file-id { font-size: 0.8rem; color: var(--accent-sapphire); }
+        .file-name { font-weight: bold; font-size: 1.2rem; }
+        .file-meta { font-size: 0.9rem; color: var(--text-main); opacity: 0.8; }
+
+        /* Toast System */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            background-color: var(--bg-mantle);
+            color: var(--text-main);
+            border: var(--border-width) solid var(--border-color);
+            padding: 1rem 1.5rem;
+            min-width: 300px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px var(--shadow-color);
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toast.success { border-left: 10px solid var(--accent-green); }
+        .toast.error { border-left: 10px solid var(--accent-red); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            padding-bottom: 2rem;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #111;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div>
+                <h1>SecureVault</h1>
+                <p class="tagline">Keep your secrets safe. Or don't. I'm just a div.</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div id="health-badge" class="status-badge">API: CHECKING...</div>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
+                    ◑
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN GRID -->
+        <div class="grid-2">
+            
+            <!-- UPLOAD ZONE -->
+            <div class="card">
+                <h2 style="color: var(--accent-green); margin-bottom: 1rem;">>> UPLOAD_ZONE</h2>
+                <form id="upload-form">
+                    <label for="file">Select File</label>
+                    <input type="file" id="file" required>
+
+                    <label for="role">Access Role</label>
+                    <select id="role">
+                        <option value="Admin">Admin</option>
+                        <option value="User">User</option>
+                        <option value="Guest">Guest</option>
+                    </select>
+
+                    <label for="expiry">Expiry Date</label>
+                    <input type="date" id="expiry" required>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <span class="spinner" id="upload-spinner"></span>
+                        Encrypt & Upload
+                    </button>
+                </form>
+            </div>
+
+            <!-- DECRYPT ZONE -->
+            <div class="card">
+                <h2 style="color: var(--accent-pink); margin-bottom: 1rem;">>> DECRYPT_ZONE</h2>
+                <form id="decrypt-form">
+                    <label for="decrypt-id">File ID</label>
+                    <input type="text" id="decrypt-id" placeholder="e.g. 1234-5678" required>
+
+                    <label for="decrypt-role">Your Role</label>
+                    <select id="decrypt-role">
+                        <option value="Admin">Admin</option>
+                        <option value="User">User</option>
+                        <option value="Guest">Guest</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-success" style="width: 100%;">
+                        Decrypt File
+                    </button>
+                </form>
+                <div id="decrypt-result" style="margin-top: 1rem; display:none; padding: 1rem; border: 3px solid #111; background: var(--bg-base);">
+                    <!-- Result content injected here -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- THE VAULT -->
+        <div class="card" style="border-color: var(--accent-sapphire);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="color: var(--accent-sapphire);">>> THE_VAULT</h2>
+                <button class="btn btn-icon" id="refresh-vault" title="Refresh List">↻</button>
+            </div>
+            
+            <div id="vault-list" class="vault-grid">
+                <!-- Items will be injected here -->
+                <div style="text-align: center; color: var(--text-main); padding: 2rem;">Loading packages...</div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>API Version: <span id="api-version">...</span></p>
+            <p>&copy; 2024 SecureVault System. No Blur Allowed.</p>
+        </footer>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const API_URL = 'http://localhost:8000'; // Or 'http://0.0.0.0:8000'
+        
+        // --- STATE MANAGEMENT ---
+        let isDarkMode = true;
+
+        // --- DOM ELEMENTS ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        const uploadForm = document.getElementById('upload-form');
+        const decryptForm = document.getElementById('decrypt-form');
+        const vaultList = document.getElementById('vault-list');
+        const healthBadge = document.getElementById('health-badge');
+        const apiVersionSpan = document.getElementById('api-version');
+        const uploadSpinner = document.getElementById('upload-spinner');
+
+        // --- UTILS ---
+        
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '✔' : '✖';
+            
+            toast.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.5rem;">${icon}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Play a little sound or vibration here if we wanted to go full playful
+            
+            // Auto remove
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- THEME TOGGLE ---
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (!isDarkMode) {
+                htmlElement.classList.add('light-mode');
+                themeToggle.textContent = '☀';
+            } else {
+                htmlElement.classList.remove('light-mode');
+                themeToggle.textContent = '◑';
+            }
+        });
+
+        // --- API INTERACTIONS ---
+
+        // 1. Check Health
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_URL}/health`);
+                const data = await res.json();
+                healthBadge.textContent = "API: ONLINE";
+                healthBadge.classList.add('ok');
+            } catch (err) {
+                healthBadge.textContent = "API: OFFLINE";
+                healthBadge.classList.remove('ok');
+                showToast("Cannot connect to Backend API", "error");
+            }
+        }
+
+        // 2. Get API Version
+        async function getApiVersion() {
+            try {
+                const res = await fetch(`${API_URL}/`);
+                const data = await res.json();
+                // Assuming data has { version: "1.0.0" } or similar, or just text
+                apiVersionSpan.textContent = data.version || "Unknown";
+            } catch (err) {
+                apiVersionSpan.textContent = "Error";
+            }
+        }
+
+        // 3. Upload / Encrypt
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = uploadForm.querySelector('button');
+            const originalText = btn.innerText;
+            
+            // UI Loading state
+            btn.disabled = true;
+            uploadSpinner.style.display = 'inline-block';
+
+            const formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
+            formData.append('role', document.getElementById('role').value);
+            formData.append('expiry', document.getElementById('expiry').value);
+
+            try {
+                const res = await fetch(`${API_URL}/encrypt`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error("Upload failed");
+                
+                const data = await res.json();
+                showToast("File Encrypted & Uploaded!", "success");
+                uploadForm.reset();
+                fetchPackages(); // Refresh the list
+            } catch (err) {
+                showToast(err.message || "Something went wrong", "error");
+            } finally {
+                btn.disabled = false;
+                uploadSpinner.style.display = 'none';
+            }
+        });
+
+        // 4. Decrypt
+        decryptForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('decrypt-id').value;
+            const role = document.getElementById('decrypt-role').value;
+            const resultDiv = document.getElementById('decrypt-result');
+
+            try {
+                const res = await fetch(`${API_URL}/decrypt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, role })
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.detail || "Decryption failed");
+                }
+
+                // Assuming backend returns file content or a download link. 
+                // If it returns a blob (file download):
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // Try to get filename from headers if possible, else default
+                a.download = `decrypted-file-${id}`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                
+                showToast("Decryption successful! Download started.", "success");
+                
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        });
+
+        // 5. List Packages (The Vault)
+        async function fetchPackages() {
+            vaultList.innerHTML = '<div style="text-align: center; padding: 2rem;">Fetching vault data...</div>';
+            
+            try {
+                const res = await fetch(`${API_URL}/packages`);
+                if (!res.ok) throw new Error("Failed to fetch packages");
+                
+                const packages = await res.json();
+                
+                vaultList.innerHTML = '';
+                
+                if (packages.length === 0) {
+                    vaultList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--accent-pink);">The Vault is empty.</div>';
+                    return;
+                }
+
+                packages.forEach(pkg => {
+                    // Structure: { id, filename, role, expiry, ... }
+                    const item = document.createElement('div');
+                    item.className = 'vault-item';
+                    item.innerHTML = `
+                        <div class="file-info">
+                            <div class="file-id">ID: ${pkg.id}</div>
+                            <div class="file-name">${pkg.filename || 'Unknown File'}</div>
+                            <div class="file-meta">
+                                Role: <span style="color:var(--accent-mauve)">${pkg.role}</span> | 
+                                Expires: <span style="color:var(--accent-yellow)">${pkg.expiry}</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger btn-icon" onclick="deletePackage('${pkg.id}')" title="Delete File">
+                            🗑 DELETE
+                        </button>
+                    `;
+                    vaultList.appendChild(item);
+                });
+
+            } catch (err) {
+                vaultList.innerHTML = `<div style="text-align: center; color: var(--accent-red); padding: 2rem;">Error: ${err.message}</div>`;
+            }
+        }
+
+        // 6. Delete Package
+        window.deletePackage = async (id) => {
+            if(!confirm("Are you sure you want to nuke this file?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/packages/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!res.ok) throw new Error("Delete failed");
+                
+                showToast("File deleted permanently.", "success");
+                fetchPackages(); // Refresh list
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        };
+
+        // Manual Refresh Button
+        document.getElementById('refresh-vault').addEventListener('click', fetchPackages);
+
+        // --- INITIALIZATION ---
+        function init() {
+            checkHealth();
+            getApiVersion();
+            fetchPackages();
+            
+            // Set default date to today + 1
+            const dateInput = document.getElementById('expiry');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            dateInput.valueAsDate = tomorrow;
+        }
+
+        init();
+
+    </script>
+</body>
+</html>

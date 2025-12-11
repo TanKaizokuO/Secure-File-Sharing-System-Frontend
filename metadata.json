@@ -1,0 +1,5 @@
+{
+  "name": "SecureVault",
+  "description": "A Neobrutalist Secure File Sharing Interface using Vanilla JS",
+  "requestFramePermissions": []
+}
